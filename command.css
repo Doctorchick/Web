@@ -4,7 +4,7 @@
     --primary-dark: #1A2A7A;
     --secondary-color: #00D4FF;
     --accent-color: #FF6B35;
-    --text-primary: #rgba(255,255,255,0.04);
+    --text-primary: #ffffff;
     --text-secondary: #ffffff;
     --text-light: #94A3B8;
     --background: #07102a;
@@ -1151,17 +1151,26 @@ body::before {
 }
 
 .form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 0.875rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 1rem;
-    transition: var(--transition);
-    background: var(--background);
+.form-group textarea,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+    color: #ffffff !important;
 }
 
+input::placeholder,
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+select option {
+    color: #ffffff !important;
+    background: var(--surface) !important;
+}
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
