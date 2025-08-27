@@ -70,7 +70,7 @@ body::before {
 .nav-container{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:space-between; /* Ceci pousse le logo à gauche et le menu à droite */
   gap:24px;
   padding:14px 18px;
   border-radius:18px;
@@ -78,7 +78,6 @@ body::before {
   box-shadow: 0 6px 30px rgba(5,8,20,0.6);
   border: 1px solid rgba(255,255,255,0.04);
 }
-
 .nav-logo{
   display:flex;
   align-items:center;
@@ -109,22 +108,32 @@ body::before {
     display: flex;
     gap: 18px;
     list-style: none;
-    justify-content: flex-end; /* ← ça aligne les éléments à droite */
+    margin-left: auto; /* Force le menu à aller à droite */
     align-items: center;
 }
 
 .nav-menu a {
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--muted);
     text-decoration: none;
-    color: var(--text-secondary);
-    font-weight: 500;
-    transition: var(--transition);
-    position: relative;
-    padding: 0.5rem 0;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all var(--transition);
+    transform: translateZ(0);
 }
 
-.nav-menu a:hover,
+.nav-menu a:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.03);
+    transform: translateY(-3px);
+}
+
 .nav-menu a.active {
-    color: var(--primary-color);
+    background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(35,57,158,0.18);
+    border: 1px solid rgba(255,255,255,0.04);
 }
 .nav-menu{display:flex;gap:18px;list-style:none}
 .nav-menu a{
