@@ -1,4 +1,5 @@
-// Configuration globale
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1410191180477501462/WTAKXCSzf6S185u_jw6juvwAdgdBB0FfLQoNYxUnbBQCAI_X6DNy3zCfQXekDjLmZW0U';
+
 const CONFIG = {
     currentStep: 1,
     maxFormStep: 5,
@@ -24,7 +25,6 @@ const CONFIG = {
     }
 };
 
-// Utilitaires
 const Utils = {
     hideAll: (elements) => elements.forEach(el => el.classList.add('hidden')),
     showElement: (element) => element.classList.remove('hidden'),
@@ -49,7 +49,262 @@ const Utils = {
     }
 };
 
-// Gestionnaire principal
+async function sendToDiscordWebhook(data) {
+    const embed = {
+        title: "🏗️ Nouvelle Commande Kurugane Bases",
+        color: 0x00ff88,
+        timestamp: new Date().toISOString(),
+        thumbnail: {
+            url: "https://media.discordapp.net/attachments/1342796570319519804/1409503458201047070/image.png?ex=68af9823&is=68ae46a3&hm=5c20f86fdeb28c245373a1e49b529d197bf944348458836b81fa6201a2e26212&=&format=webp&quality=lossless"
+        },
+        fields: []
+    };
+
+    embed.fields.push({
+        name: "📋 Type de Commande",
+        value: data.choice === 'create' ? '🎨 **Création personnalisée**' : '🛒 **Commande base existante**',
+        inline: true
+    });
+
+    embed.fields.push({
+        name: "🏠 Type de Base",
+        value: `${getIconForBaseType(data.baseType)} **${data.baseType}**${data.subType ? ` (${data.subType})` : ''}`,
+        inline: true
+    });
+
+    embed.fields.push({
+        name: "🧱 Nombre de Props",
+        value: `**${data.props}** props`,
+        inline: true
+    });
+
+    if (data.people && data.people > 1) {
+        embed.fields.push({
+            name: "👥 Équipe Construction",
+            value: `**${data.people}** personne${data.people > 1 ? 's' : ''}`,
+            inline: true
+        });
+    }
+
+    if (data.budget) {
+        embed.fields.push({
+            name: "💰 Budget Client",
+            value: `**${formatMoney(data.budget)}**`,
+            inline: true
+        });
+    }
+
+    if (data.rights) {
+        embed.fields.push({
+            name: "⚖️ Type de Licence",
+            value: `**${getRightsLabel(data.rights)}**`,
+            inline: true
+        });
+    }
+
+    if (data.coordinates && !data.coordinates.includes('Cliquez')) {
+        embed.fields.push({
+            name: "📍 Localisation Demandée",
+            value: `\`${data.coordinates.replace('Coordonnées : ', '')}\``,
+            inline: false
+        });
+    }
+
+    if (data.explication && data.explication.trim()) {
+        embed.fields.push({
+            name: "📝 Description du Client",
+            value: data.explication.length > 800 ? 
+                `${data.explication.substring(0, 800)}...` : 
+                data.explication,
+            inline: false
+        });
+    }
+
+    embed.fields.push({
+        name: "\u200B",
+        value: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        inline: false
+    });
+
+    let contactText = `👤 **${data.contactName}**\n💬 ${data.contactDiscord}`;
+    if (data.contactEmail && data.contactEmail.trim()) {
+        contactText += `\n📧 ${data.contactEmail}`;
+    }
+    
+    embed.fields.push({
+        name: "📞 Informations de Contact",
+        value: contactText,
+        inline: false
+    });
+
+    if (data.contactMessage && data.contactMessage.trim()) {
+        embed.fields.push({
+            name: "💬 Message Supplémentaire",
+            value: data.contactMessage.length > 500 ? 
+                `${data.contactMessage.substring(0, 500)}...` : 
+                data.contactMessage,
+            inline: false
+        });
+    }
+    embed.footer = {
+        text: `Commande reçue le ${new Date().toLocaleString('fr-FR')} • Kurugane Bases`,
+        icon_url: "https://media.discordapp.net/attachments/1342796570319519804/1409503458201047070/image.png?ex=68af9823&is=68ae46a3&hm=5c20f86fdeb28c245373a1e49b529d197bf944348458836b81fa6201a2e26212&=&format=webp&quality=lossless"
+    };
+
+    const payload = {
+        username: "🤖 Kurugane Assistant",
+        avatar_url: "https://media.discordapp.net/attachments/1342796570319519804/1409503458201047070/image.png?ex=68af9823&is=68ae46a3&hm=5c20f86fdeb28c245373a1e49b529d197bf944348458836b81fa6201a2e26212&=&format=webp&quality=lossless",
+        content: `🔔 **Nouvelle commande reçue !** <@&1362120827784659186>`,
+        embeds: [embed]
+    };
+
+    try {
+        const response = await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur Discord ${response.status}: ${errorText}`);
+        }
+
+        return { success: true };
+
+    } catch (error) {
+        return { 
+            success: false, 
+            error: error.message 
+        };
+    }
+}
+
+function getIconForBaseType(type) {
+    const icons = {
+        'PO': '🛡️',
+        'Farm': '🌱', 
+        'RP': '🎭',
+        'EVENT': '🎉',
+        'CASINO': '🎰',
+        'Autre': '🏠'
+    };
+    return icons[type] || '🏗️';
+}
+
+function getRightsLabel(rights) {
+    const labels = {
+        'copie-revente': '📋 Copie & Revente (Standard)',
+        'exclusivite-copie': '👑 Exclusivité avec copie (+500k$)', 
+        'exclusivite-supprime': '🔒 Exclusivité totale (+1M$)'
+    };
+    return labels[rights] || rights;
+}
+
+function formatMoney(amount) {
+    return new Intl.NumberFormat('fr-FR').format(amount) + ' $';
+}
+
+function collectFormData() {
+    const selectedChoice = document.querySelector('.choice-card.selected');
+    CONFIG.selections.choice = selectedChoice?.dataset.choice || '';
+
+    const selectedBase = document.querySelector('.option-card.selected');
+    CONFIG.selections.baseType = selectedBase?.dataset.value || '';
+    
+    const selectedSubType = document.querySelector('.sub-option-card.selected');
+    CONFIG.selections.subType = selectedSubType?.dataset.value || '';
+    
+    CONFIG.selections.explanation = document.getElementById('explication-text')?.value || '';
+
+    const selectedProps = document.querySelector('.props-choice-card.selected');
+    CONFIG.selections.propsCount = selectedProps?.dataset.value || '';
+    
+    const peopleSlider = document.getElementById('people-slider');
+    CONFIG.selections.peopleCount = peopleSlider ? parseInt(peopleSlider.value) : 2;
+
+    const selectedRights = document.querySelector('.option-rights-card.selected');
+    CONFIG.selections.rights = selectedRights?.dataset.value || '';
+
+    const coordsElement = document.getElementById('coords');
+    CONFIG.selections.coordinates = coordsElement?.textContent || '';
+
+    return {
+        choice: CONFIG.selections.choice,
+        baseType: CONFIG.selections.baseType,
+        subType: CONFIG.selections.subType,
+        explication: CONFIG.selections.explanation,
+        props: CONFIG.selections.propsCount,
+        people: CONFIG.selections.peopleCount,
+        rights: CONFIG.selections.rights,
+        budget: CONFIG.selections.budget,
+        coordinates: CONFIG.selections.coordinates,
+        contactName: document.getElementById('contact-name')?.value.trim() || '',
+        contactEmail: document.getElementById('contact-email')?.value.trim() || '',
+        contactDiscord: document.getElementById('contact-discord')?.value.trim() || '',
+        contactMessage: document.getElementById('contact-message')?.value.trim() || ''
+    };
+}
+
+function validateFormData(data) {
+    const errors = [];
+    
+    if (!data.contactName) errors.push('Le nom IG est requis');
+    if (!data.contactDiscord) errors.push('Le Discord est requis');
+    if (!data.baseType) errors.push('Le type de base doit être sélectionné');
+    if (!data.props) errors.push('Le nombre de props doit être sélectionné');
+    
+    return errors;
+}
+
+function showSuccessStep(data) {
+    document.querySelectorAll('.step-container').forEach(step => {
+        step.classList.add('hidden');
+    });
+    const successStep = document.getElementById('step-4');
+    if (successStep) {
+        successStep.classList.remove('hidden');
+        
+        const finalSummary = document.getElementById('final-summary');
+        if (finalSummary) {
+            finalSummary.innerHTML = generateFinalSummary(data);
+        }
+    }
+}
+
+function generateFinalSummary(data) {
+    return `
+        <div class="summary-items">
+            <div class="summary-item">
+                <span class="item-label">Type de base:</span>
+                <span class="item-value">${data.baseType}${data.subType ? ` (${data.subType})` : ''}</span>
+            </div>
+            <div class="summary-item">
+                <span class="item-label">Nombre de props:</span>
+                <span class="item-value">${data.props}</span>
+            </div>
+            <div class="summary-item">
+                <span class="item-label">Budget proposé:</span>
+                <span class="item-value">${formatMoney(data.budget)}</span>
+            </div>
+            <div class="summary-item">
+                <span class="item-label">Contact Discord:</span>
+                <span class="item-value">${data.contactDiscord}</span>
+            </div>
+            <div class="summary-item">
+                <span class="item-label">Référence:</span>
+                <span class="item-value">#KB-${Date.now().toString().slice(-6)}</span>
+            </div>
+        </div>
+        <div class="success-note">
+            <p><strong>✅ Votre commande a été envoyée avec succès sur notre Discord !</strong></p>
+            <p>Nous vous contacterons sous 24h pour discuter des détails.</p>
+        </div>
+    `;
+}
+
 class KuruganeApp {
     constructor() {
         this.init();
@@ -57,62 +312,83 @@ class KuruganeApp {
     }
 
     init() {
-        // Animation d'entrée
         setTimeout(() => {
             document.querySelector('.step-container:not(.hidden)').style.opacity = '1';
         }, 100);
     }
 
     bindEvents() {
-        // Choix initial (Créer vs Commander)
         document.querySelectorAll('.choice-card').forEach(card => {
             card.addEventListener('click', (e) => this.handleChoiceSelection(e));
         });
 
-        // Sélection des options dans les formulaires
         document.querySelectorAll('.option-card, .props-choice-card, .option-rights-card').forEach(card => {
             card.addEventListener('click', (e) => this.handleOptionSelection(e));
         });
 
-        // Sélection des sous-options
         document.querySelectorAll('.sub-option-card').forEach(card => {
             card.addEventListener('click', (e) => this.handleSubOptionSelection(e));
         });
 
-        // Navigation du formulaire
         CONFIG.elements.prevBtn.addEventListener('click', () => this.navigateForm('prev'));
         CONFIG.elements.nextBtn.addEventListener('click', () => this.navigateForm('next'));
 
-        // Gestion des sliders
         this.initSliders();
-
-        // Carte interactive
         this.initMap();
 
-        // Finalisation
-        document.getElementById('submit-order')?.addEventListener('click', () => this.submitOrder());
         document.getElementById('back-to-config')?.addEventListener('click', () => this.goToStep(2));
-
-        // Navigation mobile
         this.initMobileNav();
+        this.initSubmitButton();
+    }
+
+    initSubmitButton() {
+        const submitButton = document.getElementById('submit-order');
+        if (submitButton) {
+            submitButton.onclick = async (e) => {
+                e.preventDefault();
+                
+                const data = collectFormData();
+                const errors = validateFormData(data);
+                if (errors.length > 0) {
+                    this.showNotification('Erreurs :\n' + errors.join('\n'), 'error');
+                    return;
+                }
+                
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi vers Discord...';
+                
+                try {
+                    const result = await sendToDiscordWebhook(data);
+                    
+                    if (result.success) {
+                        showSuccessStep(data);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                    
+                } catch (error) {
+                    this.showNotification('Erreur lors de l\'envoi vers Discord.\nVeuillez nous contacter directement.\n\nErreur: ' + error.message, 'error');
+                    
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Finaliser la Commande';
+                }
+            };
+        }
     }
 
     handleChoiceSelection(e) {
         const card = e.currentTarget;
         const choice = card.dataset.choice;
         
-        // Mise à jour visuelle
         document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         
-        // Sauvegarde et navigation
         CONFIG.selections.choice = choice;
         
         setTimeout(() => {
             if (choice === 'create') {
                 this.goToStep(2);
             } else {
-                // Redirection vers page de commande existante
                 window.location.href = 'bases.html';
             }
         }, 500);
@@ -123,18 +399,14 @@ class KuruganeApp {
         const container = card.closest('.option-cards, .props-choices, .rights-options');
         const value = card.dataset.value;
         
-        // Désélectionner les autres options dans le même groupe
         container.querySelectorAll('.option-card, .props-choice-card, .option-rights-card')
             .forEach(c => c.classList.remove('selected'));
         
-        // Sélectionner la carte actuelle
         card.classList.add('selected');
         
-        // Sauvegarder la sélection
         if (container.classList.contains('option-cards')) {
             CONFIG.selections.baseType = value;
             
-            // Afficher les sous-options pour "Autre"
             const subSelection = document.getElementById('autre-type-subselection');
             if (value === 'Autre') {
                 Utils.showElement(subSelection);
@@ -147,14 +419,12 @@ class KuruganeApp {
         } else if (container.classList.contains('props-choices')) {
             CONFIG.selections.propsCount = value;
             
-            // Afficher/masquer le slider de personnes selon la sélection
             const peopleSliderContainer = document.getElementById('people-slider-container');
             if (value === '+130') {
                 Utils.showElement(peopleSliderContainer);
                 Utils.animateElement(peopleSliderContainer);
             } else {
                 Utils.hideElement(peopleSliderContainer);
-                // Réinitialiser la sélection de personnes si on change d'option
                 CONFIG.selections.peopleCount = 2;
                 const peopleDisplay = document.getElementById('people-display');
                 if (peopleDisplay) {
@@ -169,10 +439,7 @@ class KuruganeApp {
             CONFIG.selections.rights = value;
         }
         
-        // Animation de feedback
         this.showSelectionFeedback(card);
-        
-        // Mettre à jour l'état du bouton suivant
         this.updateNextButtonState();
     }
 
@@ -180,21 +447,16 @@ class KuruganeApp {
         const card = e.currentTarget;
         const value = card.dataset.value;
         
-        // Désélectionner les autres sous-options
         document.querySelectorAll('.sub-option-card').forEach(c => c.classList.remove('selected'));
         
-        // Sélectionner la carte actuelle
         card.classList.add('selected');
         
-        // Sauvegarder la sélection
         CONFIG.selections.subType = value;
         
-        // Afficher le champ d'explication
         const explicField = document.getElementById('explication-field');
         Utils.showElement(explicField);
         Utils.animateElement(explicField);
         
-        // Animation de feedback
         this.showSelectionFeedback(card);
     }
 
@@ -209,7 +471,6 @@ class KuruganeApp {
     }
 
     initSliders() {
-        // Slider pour le nombre de personnes (props >130)
         const peopleSlider = document.getElementById('people-slider');
         const peopleDisplay = document.getElementById('people-display');
         
@@ -221,7 +482,6 @@ class KuruganeApp {
             });
         }
         
-        // Slider pour le budget
         const budgetSlider = document.getElementById('budget-slider');
         const budgetDisplay = document.getElementById('budget-display');
         
@@ -231,10 +491,6 @@ class KuruganeApp {
                 20000000, 25000000, 30000000
             ];
             
-            const formatMoney = (amount) => {
-                return new Intl.NumberFormat('fr-FR').format(amount) + ' $';
-            };
-            
             budgetSlider.addEventListener('input', (e) => {
                 const index = parseInt(e.target.value) - 1;
                 const value = budgetValues[Math.min(index, budgetValues.length - 1)];
@@ -242,15 +498,13 @@ class KuruganeApp {
                 budgetDisplay.textContent = formatMoney(value);
             });
             
-            // Initialiser l'affichage
             CONFIG.selections.budget = budgetValues[0];
             budgetDisplay.textContent = formatMoney(budgetValues[0]);
         }
     }
 
     updateNextButtonState() {
-        // Cette fonction peut être utilisée pour activer/désactiver le bouton suivant
-        // en fonction des sélections actuelles
+        
     }
 
     navigateForm(direction) {
@@ -276,7 +530,6 @@ class KuruganeApp {
                     this.showNotification('Veuillez sélectionner un sous-type pour "Autre"', 'warning');
                     return false;
                 }
-                // Sauvegarder l'explication si nécessaire
                 const explanation = document.getElementById('explication-text')?.value;
                 if (explanation) {
                     CONFIG.selections.explanation = explanation;
@@ -287,7 +540,6 @@ class KuruganeApp {
                     this.showNotification('Veuillez sélectionner le nombre de props', 'warning');
                     return false;
                 }
-                // Sauvegarder le nombre de personnes si nécessaire
                 if (CONFIG.selections.propsCount === '+130') {
                     const peopleSlider = document.getElementById('people-slider');
                     if (peopleSlider) {
@@ -302,34 +554,27 @@ class KuruganeApp {
                 }
                 break;
             case 4:
-                // Le budget est automatiquement sauvegardé via le slider
                 break;
             case 5:
-                // Les coordonnées sont optionnelles
                 break;
         }
         return true;
     }
 
     updateFormDisplay() {
-        // Masquer toutes les étapes du formulaire
         CONFIG.elements.formSteps.forEach(step => step.classList.remove('active'));
         
-        // Afficher l'étape actuelle
         const currentFormStep = document.getElementById(`form-step-${CONFIG.currentStep}`);
         if (currentFormStep) {
             currentFormStep.classList.add('active');
             Utils.animateElement(currentFormStep);
         }
         
-        // Mettre à jour la barre de progression
         Utils.updateProgress(CONFIG.currentStep);
         
-        // Mettre à jour les boutons de navigation
         CONFIG.elements.prevBtn.disabled = CONFIG.currentStep === 1;
         CONFIG.elements.nextBtn.textContent = CONFIG.currentStep === CONFIG.maxFormStep ? 'Finaliser' : 'Suivant';
         
-        // Si dernière étape, aller au résumé
         if (CONFIG.currentStep === CONFIG.maxFormStep && CONFIG.elements.nextBtn.textContent === 'Finaliser') {
             CONFIG.elements.nextBtn.onclick = () => this.goToSummary();
         }
@@ -410,9 +655,6 @@ class KuruganeApp {
         }
         
         if (CONFIG.selections.budget) {
-            const formatMoney = (amount) => {
-                return new Intl.NumberFormat('fr-FR').format(amount) + ' $';
-            };
             summaryHTML += `
                 <div class="summary-item">
                     <div class="summary-label">Budget</div>
@@ -445,7 +687,6 @@ class KuruganeApp {
         let isDragging = false;
         let startX, startY;
         
-        // Click pour placer un marqueur
         carte.addEventListener('click', (e) => {
             if (isDragging) return;
             
@@ -456,7 +697,6 @@ class KuruganeApp {
             this.placeMarker(x, y, rect);
         });
         
-        // Drag and drop du marqueur
         mapMarker.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX - mapMarker.offsetLeft;
@@ -473,7 +713,6 @@ class KuruganeApp {
             const x = e.clientX - rect.left - startX + 10;
             const y = e.clientY - rect.top - startY + 10;
             
-            // Contraindre dans les limites de la carte
             const constrainedX = Math.max(0, Math.min(x, rect.width));
             const constrainedY = Math.max(0, Math.min(y, rect.height));
             
@@ -486,7 +725,6 @@ class KuruganeApp {
             document.removeEventListener('mouseup', handleMouseUp);
         };
         
-        // Bouton "Où vous voulez"
         if (anywhereBtn) {
             anywhereBtn.addEventListener('click', () => {
                 CONFIG.selections.coordinates = 'Libre choix';
@@ -501,7 +739,6 @@ class KuruganeApp {
         
         this.updateMarkerPosition(x, y, rect);
         
-        // Afficher le marqueur avec animation
         Utils.showElement(mapMarker);
         mapMarker.style.animation = 'markerPulse 1s ease-out';
         setTimeout(() => mapMarker.style.animation = '', 1000);
@@ -519,25 +756,6 @@ class KuruganeApp {
         
         CONFIG.selections.coordinates = `${percentX}%, ${percentY}%`;
         coordsDisplay.textContent = `Coordonnées : ${percentX}%, ${percentY}%`;
-    }
-
-    submitOrder() {
-        const name = document.getElementById('contact-name')?.value;
-        const discord = document.getElementById('contact-discord')?.value;
-        
-        if (!name || !discord) {
-            this.showNotification('Veuillez remplir les champs obligatoires', 'error');
-            return;
-        }
-        
-        // Simulation d'envoi
-        this.showNotification('Envoi en cours...', 'info');
-        
-        setTimeout(() => {
-            this.goToStep(4);
-            document.getElementById('final-summary').innerHTML = 
-                document.getElementById('summary-items').innerHTML;
-        }, 2000);
     }
 
     showNotification(message, type = 'info') {
@@ -590,7 +808,6 @@ class KuruganeApp {
                 navMenu.classList.toggle('active');
             });
             
-            // Fermer le menu en cliquant sur un lien
             document.querySelectorAll('.nav-menu a').forEach(link => {
                 link.addEventListener('click', () => {
                     hamburger.classList.remove('active');
@@ -601,7 +818,6 @@ class KuruganeApp {
     }
 }
 
-// Styles CSS pour les notifications
 const notificationStyles = `
     @keyframes slideInRight {
         from {
@@ -641,19 +857,15 @@ const notificationStyles = `
     }
 `;
 
-// Injection des styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = notificationStyles;
 document.head.appendChild(styleSheet);
 
-// Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
     new KuruganeApp();
 });
 
-// Effets visuels avancés
 document.addEventListener('DOMContentLoaded', () => {
-    // Effet de parallaxe subtil
     window.addEventListener('scroll', () => {
         const scrolled = window.pageYOffset;
         const parallax = document.querySelector('.command-header');
@@ -662,7 +874,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Animation d'apparition progressive des éléments
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -677,7 +888,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, observerOptions);
 
-    // Observer tous les éléments avec animation
     const animatedElements = document.querySelectorAll('.choice-card, .option-card, .props-choice-card, .option-rights-card, .summary-card, .contact-form');
     animatedElements.forEach((el, index) => {
         el.style.opacity = '0';
@@ -686,7 +896,6 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
 
-    // Effet de ripple sur les boutons
     document.querySelectorAll('.btn').forEach(button => {
         button.addEventListener('click', function(e) {
             const rect = this.getBoundingClientRect();
@@ -716,7 +925,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Animation CSS pour l'effet ripple
     const rippleStyle = document.createElement('style');
     rippleStyle.textContent = `
         @keyframes ripple {
@@ -729,10 +937,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(rippleStyle);
 });
 
-// Gestion des touches clavier pour l'accessibilité
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        // Fermer le menu mobile si ouvert
         const hamburger = document.querySelector('.hamburger.active');
         const navMenu = document.querySelector('.nav-menu.active');
         if (hamburger && navMenu) {
@@ -742,7 +948,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Export de la classe pour utilisation externe si nécessaire
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = KuruganeApp;
 }
