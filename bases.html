@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>En Développement</title>
+    <title>En Développement - Bientôt Disponible</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -473,7 +473,31 @@
             }
         }
 
-        /* Loading Animation */
+        /* Bouton accueil */
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(90deg, #23399E, #3a57d6);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 12px 30px rgba(35, 57, 158, 0.28));
+        }
+
+        .btn-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(35, 57, 158, 0.45);
+            background: linear-gradient(90deg, #3a57d6, #23399E);
+        }
+
+        .btn-home i {
+            font-size: 1.125rem;
+        }
         .loading-dots {
             display: inline-flex;
             gap: 4px;
@@ -524,6 +548,11 @@
             Nous travaillons dur pour vous offrir une expérience exceptionnelle. 
             Notre équipe met les dernières touches à quelque chose de vraiment spécial.
         </p>
+        
+        <a href="index.html" class="btn-home">
+            <i class="fas fa-home"></i>
+            Retour à l'accueil
+        </a>
     </div>
 
     <script>
