@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commande - Kurugane Bases</title>
-    <link rel="icon" type="image/png" href="https://github.com/Doctorchick/Web/raw/main/data/image.png">
+    <link rel="icon" type="image/png" href="/web/image/website/1/logo/Base%20Kurugane?unique=354e38b">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -230,25 +230,27 @@
                     </div>
                 </div>
                 <div class="form-step" id="form-step-4">
+                    <h3>Budget</h3>
                     <h4>Prix que vous êtes prêt à mettre</h4>
-                        <div class="people-slider">
-                            <input type="range" id="people-slider" min="1" max="30" step="1" value="1">
+                    <div class="budget-slider-container">
+                        <div class="budget-slider">
+                            <input type="range" id="budget-slider" min="1" max="8" step="1" value="1">
                             <div class="slider-labels">
-                                <span>1,000,000 $</span>
-                                <span>2,000,000 $</span>
-                                <span>5,000,000 $</span>
-                                <span>10,000,000 $</span>
-                                <span>15,000,000 $</span>
-                                <span>20,000,000 $</span>
-                                <span>25,000,000 $</span>
-                                <span>30,000,000 $</span>
+                                <span>1M$</span>
+                                <span>2M$</span>
+                                <span>5M$</span>
+                                <span>10M$</span>
+                                <span>15M$</span>
+                                <span>20M$</span>
+                                <span>25M$</span>
+                                <span>30M$</span>
                             </div> 
                         </div>
-                        <div class="people-value">
-                            <span id="people-display">1,000,000 $</span>
+                        <div class="budget-value">
+                            <span id="budget-display">1,000,000 $</span>
                         </div>
                     </div>
-
+                </div>
                 <div class="form-step" id="form-step-5">
                     <h3>Localisation sur la Carte</h3>
                     <div class="map-section">
@@ -380,6 +382,4 @@
 
     <script src="script.js"></script>
 </body>
-
 </html>
-
