@@ -42,7 +42,6 @@ body{
   -moz-osx-font-smoothing:grayscale;
 }
 
-/* Glassmorphism Background */
 body::before {
     content: '';
     position: fixed;
@@ -108,8 +107,9 @@ body::before {
 
 .nav-menu {
     display: flex;
-    gap: 2rem;
+    gap: 18px;
     list-style: none;
+    justify-content: flex-end; /* ← ça aligne les éléments à droite */
     align-items: center;
 }
 
@@ -776,7 +776,7 @@ body::before {
 
 .option-rights-card.selected {
     border-color: var(--primary-color);
-    background: linear-gradient(135deg, rgba(35, 57, 158, 0.05), rgba(255, 255, 255, 1));
+    background: linear-gradient(135deg, rgba(35, 57, 158, 0.05));
     box-shadow: var(--shadow-md);
 }
 
@@ -896,6 +896,65 @@ body::before {
     color: var(--text-light);
 }
 
+
+.budget-slider-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+}
+
+.budget-slider-container h4 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.budget-slider {
+    margin-bottom: 1rem;
+}
+
+.budget-slider input[type="range"] {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--background);
+    outline: none;
+    -webkit-appearance: none;
+    margin-bottom: 1rem;
+}
+
+.budget-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.budget-slider input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    background: var(--primary-light);
+}
+
+.budget-slider input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
 .people-value {
     text-align: center;
     font-size: 1.25rem;
@@ -1089,9 +1148,9 @@ body::before {
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
-
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.explication-field textarea {
     width: 100%;
     padding: 0.875rem;
     border: 2px solid var(--border);
@@ -1100,6 +1159,13 @@ body::before {
     font-size: 1rem;
     transition: var(--transition);
     background: var(--background);
+    color: white; /* Texte en blanc */
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.explication-field textarea::placeholder {
+    color: var(--text-light); /* Placeholder en gris clair */
 }
 
 .form-group input:focus,
