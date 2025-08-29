@@ -381,5 +381,25 @@
     </footer>
 
     <script src="data/js/Cscripts.js"></script>
+    <script>
+const files = [
+  "https://raw.githubusercontent.com/Doctorchick/AntidebugJS/main/config.js",
+  "https://raw.githubusercontent.com/Doctorchick/AntidebugJS/main/detectors.js",
+  "https://raw.githubusercontent.com/Doctorchick/AntidebugJS/main/reactions.js",
+  "https://raw.githubusercontent.com/Doctorchick/AntidebugJS/main/obfuscator.js",
+  "https://raw.githubusercontent.com/Doctorchick/AntidebugJS/main/main-antidebug.js"
+];
+
+function loadScripts(files) {
+  if (files.length === 0) return;
+  const script = document.createElement("script");
+  script.src = files[0];
+  script.onload = () => loadScripts(files.slice(1));
+  document.head.appendChild(script);
+}
+
+loadScripts(files);
+</script>
 </body>
+
 </html>
